@@ -3,7 +3,8 @@ package modbus
 import (
 	"encoding/binary"
 	"fmt"
-	"io"
+	//"io"
+	//"strconv"
 	"time"
 )
 
@@ -132,67 +133,18 @@ func (sf *RTUClientProvider) SendRawFrame(aduRequest []byte) (aduResponse []byte
 
 	// Send the request
 	sf.Debug("sending [% x]", aduRequest)
-	var tryCnt byte
-	for {
-		_, err = sf.port.Write(aduRequest)
-		if err == nil { // success
-			break
-		}
-		if sf.autoReconnect == 0 {
-			return
-		}
-		for {
-			err = sf.connect()
-			if err == nil {
-				break
-			}
-			tryCnt++
-			if tryCnt >= sf.autoReconnect {
-				return
-			}
-		}
-	}
-
-	function, functionFail := aduRequest[1], aduRequest[1]|0x80
-	bytesToRead := calculateResponseLength(aduRequest)
-	time.Sleep(sf.calculateDelay(len(aduRequest) + bytesToRead))
-
-	var n int
-	var n1 int
-	var data [rtuAduMaxSize]byte
-	// We first read the minimum length and then read either the full package
-	// or the error package, depending on the error status (byte 2 of the response)
-	n, err = io.ReadAtLeast(sf.port, data[:], rtuAduMinSize)
+	_, err = sf.port.Write(aduRequest)
 	if err != nil {
-		return
+		sf.Error("222", err)
 	}
-
-	switch {
-	case data[1] == function:
-		// if the function is correct
-		// we read the rest of the bytes
-		if n < bytesToRead {
-			if bytesToRead > rtuAduMinSize && bytesToRead <= rtuAduMaxSize {
-				if bytesToRead > n {
-					n1, err = io.ReadFull(sf.port, data[n:bytesToRead])
-					n += n1
-				}
-			}
-		}
-	case data[1] == functionFail:
-		// for error we need to read 5 bytes
-		if n < rtuExceptionSize {
-			n1, err = io.ReadFull(sf.port, data[n:rtuExceptionSize])
-		}
-		n += n1
-	default:
-		err = fmt.Errorf("modbus: unknown function code % x", data[1])
-	}
+	data := make([]byte, 1024)
+	time.Sleep(1000 * time.Millisecond)
+	n, err := sf.port.Read(data)
 	if err != nil {
-		return
+		return nil, err
 	}
 	aduResponse = data[:n]
-	sf.Debug("received [% x]", aduResponse)
+	sf.Debug("receive [% x]", data[:n])
 	return aduResponse, nil
 }
 
