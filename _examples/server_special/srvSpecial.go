@@ -6,7 +6,7 @@ import (
 	_ "net/http/pprof"
 	"time"
 
-	modbus "github.com/thinkgos/gomodbus/v2"
+	modbus "github.com/canghai908/gomodbus/v2"
 )
 
 func main() {
