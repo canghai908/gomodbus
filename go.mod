@@ -1,4 +1,4 @@
-module github.com/thinkgos/gomodbus/v2
+module github.com/canghai908/gomodbus
 
 go 1.14
 
