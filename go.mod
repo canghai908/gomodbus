@@ -1,4 +1,4 @@
-module github.com/canghai908/gomodbus
+module github.com/canghai908/gomodbus/v2
 
 go 1.14
 
